@@ -126,6 +126,9 @@ input, textarea, select{ font-family:inherit; }
 }
 .editable:hover, .editable:focus{ border-bottom-color:var(--accent-pink); }
 .editable:empty::before{ content:attr(data-placeholder); color:rgba(255,255,255,.5); }
+.editable.dark{ border-bottom-color:var(--gray-200); color:var(--dark); font-weight:700; }
+.editable.dark:hover, .editable.dark:focus{ border-bottom-color:var(--magenta); }
+.editable.dark:empty::before{ color:var(--gray-400); }
 .hero-consultant h1{ color:var(--white); font-size:2.1rem; margin-bottom:6px; }
 .hero-consultant .role-line{ font-size:1.05rem; color:rgba(255,255,255,.85); font-weight:600; margin-bottom:14px; }
 .contact-row{ display:flex; gap:22px; flex-wrap:wrap; font-size:.92rem; color:rgba(255,255,255,.85); }
@@ -157,6 +160,12 @@ input, textarea, select{ font-family:inherit; }
 }
 .category-box p{ font-size:.95rem; color:var(--gray-800); }
 .category-box strong{ color:var(--dark); }
+
+.company-contact{
+  margin-top:20px; display:flex; flex-wrap:wrap; gap:16px 28px;
+  background:var(--white); border:1px solid var(--gray-200); border-radius:var(--radius-sm);
+  padding:16px 22px; font-size:.9rem; color:var(--gray-600);
+}
 
 /* ===== Slide 3: perguntas ===== */
 .q-section{
@@ -299,10 +308,10 @@ input, textarea, select{ font-family:inherit; }
           <div class="avatar" id="avatarInitials">?</div>
           <div>
             <h1><span class="editable" id="consultName" contenteditable="true" data-placeholder="Nome do consultor"></span></h1>
-            <div class="role-line"><span class="editable" contenteditable="true" data-placeholder="Cargo, ex.: Consultora de Relacionamento FlexiPay"></span></div>
+            <div class="role-line"><span class="editable" id="consultRole" contenteditable="true" data-placeholder="Cargo, ex.: Consultora de Relacionamento FlexiPay"></span></div>
             <div class="contact-row">
-              <span>WhatsApp: <span class="editable" contenteditable="true" data-placeholder="(11) 9999 9999"></span></span>
-              <span>E-mail: <span class="editable" contenteditable="true" data-placeholder="nome@flexipay.com.br"></span></span>
+              <span>WhatsApp: <span class="editable" id="consultPhone" contenteditable="true" data-placeholder="(11) 9999 9999"></span></span>
+              <span>E-mail: <span class="editable" id="consultEmail" contenteditable="true" data-placeholder="nome@flexipay.com.br"></span></span>
             </div>
           </div>
         </div>
@@ -339,6 +348,12 @@ input, textarea, select{ font-family:inherit; }
 
         <div class="category-box">
           <p><strong>O que a FlexiPay não é:</strong> não é banco, não é consultoria financeira e não é apenas um software.<br><strong>O que a FlexiPay é:</strong> a parceira estratégica de gestão e estabilidade financeira da escola.</p>
+        </div>
+
+        <div class="company-contact">
+          <span>Site: <span class="editable dark" id="companySite" contenteditable="true" data-placeholder="www.flexipay.com.br"></span></span>
+          <span>Instagram: <span class="editable dark" id="companyInstagram" contenteditable="true" data-placeholder="@flexipay"></span></span>
+          <span>LinkedIn: <span class="editable dark" id="companyLinkedin" contenteditable="true" data-placeholder="/company/flexipay"></span></span>
         </div>
       </div>
     </section>
@@ -580,6 +595,19 @@ consultName.addEventListener('input', () => {
   avatarInitials.textContent = initials.toUpperCase();
 });
 
+function getTestimonials(){
+  const cards = document.querySelectorAll('.testi-card');
+  const result = [];
+  cards.forEach(card => {
+    const quote = card.querySelector('.testi-quote').textContent.trim();
+    const badge = card.querySelector('.testi-badge').textContent.trim();
+    const name = card.querySelector('.testi-name').textContent.trim();
+    const sub = card.querySelector('.testi-sub').textContent.trim();
+    if(quote) result.push({ quote, badge, name, sub });
+  });
+  return result;
+}
+
 function collectFieldsByCategory(){
   const categories = [];
   document.querySelectorAll('.slide[data-slide="3"] .q-section').forEach(section => {
@@ -667,10 +695,12 @@ function generatePDF(){
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   const marginX = 18;
+  const contentWidth = pageWidth - marginX * 2;
   let y = 0;
 
   const dark = [16, 1, 39];
   const magenta = [145, 39, 143];
+  const pink = [237, 19, 105];
   const gray = [90, 90, 95];
   const lightGray = [226, 224, 228];
 
@@ -694,9 +724,27 @@ function generatePDF(){
     }
   }
 
+  function sectionTitle(title){
+    checkPageBreak(14);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11.5);
+    doc.setTextColor(...magenta);
+    doc.text(title, marginX, y);
+    y += 2;
+    doc.setDrawColor(...lightGray);
+    doc.line(marginX, y, pageWidth - marginX, y);
+    y += 6;
+  }
+
   drawHeader();
 
   const consultantName = consultName.textContent.trim() || 'Não informado';
+  const consultantRole = document.getElementById('consultRole').textContent.trim();
+  const consultantPhone = document.getElementById('consultPhone').textContent.trim();
+  const consultantEmail = document.getElementById('consultEmail').textContent.trim();
+  const companySite = document.getElementById('companySite').textContent.trim();
+  const companyInstagram = document.getElementById('companyInstagram').textContent.trim();
+  const companyLinkedin = document.getElementById('companyLinkedin').textContent.trim();
   const schoolName = document.getElementById('nomeEscola').value.trim() || 'Escola não informada';
   const today = new Date().toLocaleDateString('pt-BR');
 
@@ -708,27 +756,117 @@ function generatePDF(){
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
   doc.setTextColor(...gray);
-  doc.text('Consultor: ' + consultantName + '   |   Data: ' + today, marginX, y);
-  y += 10;
+  doc.text('Data: ' + today, marginX, y);
+  y += 12;
 
+  sectionTitle('Perfil do consultor');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10.5);
+  doc.setTextColor(...dark);
+  doc.text(consultantName, marginX, y);
+  y += 6;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9.5);
+  doc.setTextColor(...gray);
+  const consultLines = [
+    consultantRole,
+    consultantPhone ? ('WhatsApp: ' + consultantPhone) : '',
+    consultantEmail ? ('E-mail: ' + consultantEmail) : ''
+  ].filter(Boolean);
+  consultLines.forEach(line => { doc.text(line, marginX, y); y += 5; });
+  y += 6;
+
+  sectionTitle('Sobre a FlexiPay');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10);
+  doc.setTextColor(...dark);
+  const headlineLines = doc.splitTextToSize(
+    'A parceira estratégica de gestão financeira e previsibilidade de caixa para instituições de ensino.',
+    contentWidth
+  );
+  doc.text(headlineLines, marginX, y);
+  y += headlineLines.length * 5 + 3;
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9.5);
+  doc.setTextColor(...gray);
+  const subLines = doc.splitTextToSize(
+    'Há mais de 20 anos no mercado educacional, a FlexiPay assume a emissão, o acompanhamento e a cobrança das mensalidades das escolas parceiras e oferece antecipação de receita sob medida, sem comprometer toda a receita do mês.',
+    contentWidth
+  );
+  doc.text(subLines, marginX, y);
+  y += subLines.length * 5 + 5;
+
+  const diffs = [
+    'Frente aos bancos tradicionais: estruturamos soluções de caixa alinhadas à realidade da escola, sem crédito padronizado.',
+    'Frente aos softwares de gestão: assumimos a operação para a equipe focar no atendimento, em vez de mais um sistema para alimentar.',
+    'Frente às consultorias financeiras: executamos a liquidez e a cobrança com inteligência, não entregamos só planilhas e relatórios.'
+  ];
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9.3);
+  doc.setTextColor(...dark);
+  diffs.forEach(d => {
+    checkPageBreak(12);
+    const lines = doc.splitTextToSize('•  ' + d, contentWidth - 2);
+    doc.text(lines, marginX, y);
+    y += lines.length * 4.6 + 2;
+  });
+  y += 3;
+
+  checkPageBreak(10);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.setTextColor(...magenta);
+  doc.text('23 anos de mercado   |   Brasil todo   |   Centenas de escolas atendidas   |   Taxa máxima de 2,99%', marginX, y);
+  y += 12;
+
+  const testimonials = getTestimonials();
+  if(testimonials.length){
+    sectionTitle('Depoimentos');
+    testimonials.forEach(t => {
+      checkPageBreak(26);
+      doc.setFont('helvetica', 'italic');
+      doc.setFontSize(9.5);
+      doc.setTextColor(...dark);
+      const quoteLines = doc.splitTextToSize('"' + t.quote + '"', contentWidth);
+      doc.text(quoteLines, marginX, y);
+      y += quoteLines.length * 5 + 3;
+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.setTextColor(...magenta);
+      const nameLine = t.name + (t.sub ? (', ' + t.sub) : '');
+      doc.text(nameLine || 'Escola não identificada', marginX, y);
+      y += 5;
+
+      if(t.badge){
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8.5);
+        doc.setTextColor(...pink);
+        doc.text(t.badge, marginX, y);
+        y += 5;
+      }
+      y += 4;
+    });
+  }
+
+  sectionTitle('Resumo das informações coletadas');
   const categories = collectFieldsByCategory();
 
   if(categories.length === 0){
-    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
     doc.setTextColor(...gray);
-    doc.text('Nenhuma resposta registrada ainda. Preencha as perguntas antes de gerar o PDF.', marginX, y);
+    doc.text('Nenhuma resposta registrada ainda.', marginX, y);
     y += 10;
   }
 
   categories.forEach(cat => {
     checkPageBreak(14);
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(11.5);
-    doc.setTextColor(...magenta);
+    doc.setFontSize(10.5);
+    doc.setTextColor(...dark);
     doc.text(cat.title, marginX, y);
-    y += 2;
-    doc.setDrawColor(...lightGray);
-    doc.line(marginX, y, pageWidth - marginX, y);
     y += 6;
 
     cat.rows.forEach(row => {
@@ -741,7 +879,7 @@ function generatePDF(){
       const labelWidth = doc.getTextWidth(labelText) + 3;
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(...gray);
-      const valueLines = doc.splitTextToSize(row.value, pageWidth - marginX * 2 - labelWidth);
+      const valueLines = doc.splitTextToSize(row.value, contentWidth - labelWidth);
       doc.text(valueLines, marginX + labelWidth, y);
       y += Math.max(6, valueLines.length * 5);
     });
@@ -750,7 +888,7 @@ function generatePDF(){
 
   checkPageBreak(30);
   doc.setFillColor(...dark);
-  doc.roundedRect(marginX, y, pageWidth - marginX * 2, 26, 3, 3, 'F');
+  doc.roundedRect(marginX, y, contentWidth, 26, 3, 3, 'F');
   doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10.5);
@@ -758,8 +896,27 @@ function generatePDF(){
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(9);
   const nextText = 'A FlexiPay vai calcular a taxa de gestão mensal com base nas informações acima e enviar a proposta comercial, com taxa máxima de 2,99% para a antecipação.';
-  const nextLines = doc.splitTextToSize(nextText, pageWidth - marginX * 2 - 12);
+  const nextLines = doc.splitTextToSize(nextText, contentWidth - 12);
   doc.text(nextLines, marginX + 6, y + 15);
+
+  const footerParts = [];
+  if(companySite) footerParts.push(companySite);
+  if(companyInstagram) footerParts.push('Instagram ' + companyInstagram);
+  if(companyLinkedin) footerParts.push('LinkedIn ' + companyLinkedin);
+  if(consultantPhone) footerParts.push('WhatsApp ' + consultantPhone);
+  const footerLine = footerParts.join('   |   ');
+
+  const totalPages = doc.internal.getNumberOfPages();
+  for(let i = 1; i <= totalPages; i++){
+    doc.setPage(i);
+    doc.setDrawColor(...lightGray);
+    doc.line(marginX, pageHeight - 16, pageWidth - marginX, pageHeight - 16);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(...gray);
+    if(footerLine) doc.text(footerLine, marginX, pageHeight - 10);
+    doc.text(String(i) + ' / ' + totalPages, pageWidth - marginX, pageHeight - 10, { align: 'right' });
+  }
 
   const fileSchool = schoolName.replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'escola';
   doc.save('flexipay-proposta-' + fileSchool + '.pdf');
