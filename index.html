@@ -131,15 +131,6 @@ input, textarea, select{ font-family:inherit; }
 .contact-row{ display:flex; gap:22px; flex-wrap:wrap; font-size:.92rem; color:rgba(255,255,255,.85); }
 .contact-row .editable{ color:var(--white); font-weight:700; border-bottom-color:rgba(255,255,255,.4); }
 
-.checklist{
-  margin-top:32px; background:var(--white); border:1px solid var(--gray-200); border-radius:var(--radius-md);
-  padding:26px 28px;
-}
-.checklist h3{ font-size:1.05rem; margin-bottom:14px; }
-.checklist ul{ list-style:none; display:grid; gap:12px; }
-.checklist li{ display:flex; gap:12px; font-size:.94rem; color:var(--gray-800); }
-.checklist li::before{ content:'✓'; color:var(--magenta); font-weight:800; flex-shrink:0; }
-
 /* ===== Slide 2: institucional ===== */
 .inst-headline{ font-size:2.1rem; max-width:680px; margin-bottom:16px; }
 .inst-sub{ font-size:1.05rem; color:var(--gray-600); max-width:640px; margin-bottom:34px; }
@@ -189,6 +180,13 @@ input, textarea, select{ font-family:inherit; }
 .field input:focus, .field select:focus, .field textarea:focus{ outline:none; border-color:var(--magenta); }
 .field textarea{ resize:vertical; min-height:56px; }
 
+.checkbox-group{ display:flex; flex-wrap:wrap; gap:10px 18px; padding:4px 2px; }
+.checkbox-option{ display:flex; align-items:center; gap:8px; font-size:.9rem; color:var(--gray-800); }
+.checkbox-option input[type="checkbox"]{
+  width:18px; height:18px; accent-color:var(--magenta); cursor:pointer; flex-shrink:0;
+}
+.checkbox-option label{ font-size:.9rem; font-weight:600; color:var(--gray-800); cursor:pointer; }
+
 /* ===== Slide 4: provas sociais ===== */
 .testi-note{
   background:var(--magenta-light); border-radius:var(--radius-sm); padding:14px 18px;
@@ -219,9 +217,6 @@ input, textarea, select{ font-family:inherit; }
 
 /* ===== Slide 5: resumo ===== */
 .summary-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; flex-wrap:wrap; gap:12px; }
-.interest-badge{
-  padding:8px 16px; border-radius:100px; font-size:.82rem; font-weight:800; background:var(--magenta-light); color:var(--magenta);
-}
 .summary-stats{ display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:28px; }
 .sstat{ background:var(--white); border:1px solid var(--gray-200); border-radius:var(--radius-md); padding:18px 16px; }
 .sstat .lbl{ font-size:.75rem; color:var(--gray-600); font-weight:700; text-transform:uppercase; letter-spacing:.04em; margin-bottom:6px; }
@@ -252,14 +247,13 @@ input, textarea, select{ font-family:inherit; }
 }
 .pdf-card h2{ font-size:1.3rem; margin-bottom:10px; }
 .pdf-card p{ font-size:.92rem; color:var(--gray-600); margin-bottom:26px; }
-.btn-disabled{
-  width:100%; padding:15px; border-radius:100px; border:none; background:var(--gray-200); color:var(--gray-600);
-  font-weight:800; font-size:.95rem; cursor:not-allowed; margin-bottom:12px;
+.btn-generate{
+  width:100%; padding:15px; border-radius:100px; border:none; background:var(--magenta); color:var(--white);
+  font-weight:800; font-size:.95rem; cursor:pointer; margin-bottom:12px; box-shadow:0 10px 24px rgba(145,39,143,.28);
+  transition:all .2s ease;
 }
-.soon-tag{
-  display:inline-block; font-size:.72rem; font-weight:800; color:var(--magenta); background:var(--magenta-light);
-  padding:4px 10px; border-radius:100px; margin-bottom:18px;
-}
+.btn-generate:hover{ background:var(--magenta-hover); transform:translateY(-2px); }
+.btn-generate:disabled{ background:var(--gray-200); color:var(--gray-600); cursor:not-allowed; box-shadow:none; transform:none; }
 .btn-copy{
   width:100%; padding:13px; border-radius:100px; border:2px solid var(--gray-200); background:var(--white); color:var(--dark);
   font-weight:800; font-size:.88rem; transition:all .2s ease;
@@ -312,16 +306,6 @@ input, textarea, select{ font-family:inherit; }
             </div>
           </div>
         </div>
-
-        <div class="checklist">
-          <h3>Checklist rápido antes de compartilhar a tela</h3>
-          <ul>
-            <li>Confirme o nome da escola e o nome de quem vai participar da reunião.</li>
-            <li>Tenha à mão papel e caneta ou este mesmo formulário aberto para anotar as respostas ao vivo.</li>
-            <li>Escolha os dois cases da tela 4 mais próximos do perfil dessa escola antes de iniciar.</li>
-            <li>Teste áudio, câmera e o compartilhamento de tela com uns minutos de antecedência.</li>
-          </ul>
-        </div>
       </div>
     </section>
 
@@ -367,11 +351,20 @@ input, textarea, select{ font-family:inherit; }
         <div class="q-section">
           <div class="q-section-head"><div class="q-num">1</div><h3>Perfil da escola</h3></div>
           <div class="field-grid">
+            <div class="field"><label for="nomeResponsavel">Nome</label><input type="text" id="nomeResponsavel" data-label="Nome"></div>
+            <div class="field"><label for="cargoResponsavel">Cargo (diretor, mantenedor, financeiro)</label><input type="text" id="cargoResponsavel" data-label="Cargo"></div>
             <div class="field"><label for="nomeEscola">Nome da escola</label><input type="text" id="nomeEscola" data-label="Escola"></div>
             <div class="field"><label for="cidadeEstado">Cidade e estado</label><input type="text" id="cidadeEstado" data-label="Cidade e estado"></div>
-            <div class="field"><label for="nomeResponsavel">Nome de quem está respondendo</label><input type="text" id="nomeResponsavel" data-label="Responsável"></div>
-            <div class="field"><label for="cargoResponsavel">Cargo (diretor, mantenedor, financeiro)</label><input type="text" id="cargoResponsavel" data-label="Cargo"></div>
-            <div class="field"><label for="segmentos">Segmentos atendidos (infantil, F1, F2 etc.)</label><input type="text" id="segmentos" data-label="Segmentos"></div>
+            <div class="field full">
+              <label>Segmentos atendidos</label>
+              <div class="checkbox-group" data-checkbox-group="segmentos" data-label="Segmentos atendidos">
+                <span class="checkbox-option"><input type="checkbox" id="seg1" value="Ensino Infantil"><label for="seg1">Ensino Infantil</label></span>
+                <span class="checkbox-option"><input type="checkbox" id="seg2" value="Ensino Médio"><label for="seg2">Ensino Médio</label></span>
+                <span class="checkbox-option"><input type="checkbox" id="seg3" value="Ensino Superior"><label for="seg3">Ensino Superior</label></span>
+                <span class="checkbox-option"><input type="checkbox" id="seg4" value="Preparatório/Cursinho"><label for="seg4">Preparatório/Cursinho</label></span>
+                <span class="checkbox-option"><input type="checkbox" id="seg5" value="Curso Livre"><label for="seg5">Curso Livre</label></span>
+              </div>
+            </div>
             <div class="field"><label for="tempoGestao">Há quanto tempo administra a escola</label><input type="text" id="tempoGestao" data-label="Tempo de gestão"></div>
             <div class="field"><label for="numAlunos">Quantidade de alunos matriculados</label><input type="text" id="numAlunos" data-label="Alunos"></div>
             <div class="field full"><label for="planosExpansao">Planos de crescimento (nova série, nova unidade)</label><textarea id="planosExpansao" data-label="Planos de crescimento"></textarea></div>
@@ -383,11 +376,27 @@ input, textarea, select{ font-family:inherit; }
           <div class="field-grid">
             <div class="field"><label for="ticketMedio">Valor médio da mensalidade</label><input type="text" id="ticketMedio" data-label="Ticket médio"></div>
             <div class="field"><label for="faturamentoMedio">Faturamento médio mensal</label><input type="text" id="faturamentoMedio" data-label="Faturamento médio"></div>
-            <div class="field"><label for="formaRecebimento">Como recebe hoje (boleto, pix, sistema)</label><input type="text" id="formaRecebimento" data-label="Forma de recebimento"></div>
+            <div class="field full">
+              <label>Como recebe hoje</label>
+              <div class="checkbox-group" data-checkbox-group="formaRecebimento" data-label="Como recebe hoje">
+                <span class="checkbox-option"><input type="checkbox" id="rec1" value="Boleto"><label for="rec1">Boleto</label></span>
+                <span class="checkbox-option"><input type="checkbox" id="rec2" value="Pix"><label for="rec2">Pix</label></span>
+                <span class="checkbox-option"><input type="checkbox" id="rec3" value="Sistema"><label for="rec3">Sistema</label></span>
+              </div>
+            </div>
             <div class="field"><label for="taxaAtual">Paga alguma taxa para emitir boleto hoje</label><input type="text" id="taxaAtual" data-label="Taxa atual"></div>
             <div class="field"><label for="diaVencimento">Principais dias de vencimento</label><input type="text" id="diaVencimento" data-label="Dia de vencimento"></div>
             <div class="field"><label for="inadimplencia">Nível de inadimplência hoje</label><input type="text" id="inadimplencia" data-label="Inadimplência"></div>
-            <div class="field full"><label for="usaPlanilhaSistema">Usa planilha ou sistema de gestão financeira</label><input type="text" id="usaPlanilhaSistema" data-label="Sistema usado"></div>
+            <div class="field">
+              <label for="usaPlanilhaSistema">Administrativo</label>
+              <select id="usaPlanilhaSistema" data-label="Administrativo">
+                <option value="">Selecionar</option>
+                <option>Usa planilha</option>
+                <option>Usa sistema de gestão financeira</option>
+                <option>Não usa nenhum controle, é tudo manual</option>
+                <option>Não soube informar</option>
+              </select>
+            </div>
           </div>
         </div>
 
@@ -415,16 +424,6 @@ input, textarea, select{ font-family:inherit; }
           <div class="q-section-head"><div class="q-num">4</div><h3>Decisão e próximos passos</h3></div>
           <div class="field-grid">
             <div class="field"><label for="outrosDecisores">Alguém mais participa da decisão (sócio, cônjuge, financeiro)</label><input type="text" id="outrosDecisores" data-label="Outros decisores"></div>
-            <div class="field">
-              <label for="nivelInteresse">Nível de interesse percebido</label>
-              <select id="nivelInteresse" data-label="Nível de interesse">
-                <option value="">Selecionar</option>
-                <option>Muito interessado, quer proposta</option>
-                <option>Interessado, quer avaliar com calma</option>
-                <option>Precisa pensar ou consultar alguém</option>
-                <option>Sem interesse no momento</option>
-              </select>
-            </div>
             <div class="field">
               <label for="melhorCanal">Melhor canal para o retorno</label>
               <select id="melhorCanal" data-label="Melhor canal">
@@ -479,7 +478,6 @@ input, textarea, select{ font-family:inherit; }
             <span class="eyebrow">Resumo da conversa</span>
             <h2>O que registramos até aqui</h2>
           </div>
-          <div class="interest-badge" id="interestBadge">Nível de interesse: a definir</div>
         </div>
 
         <div class="summary-stats">
@@ -505,10 +503,9 @@ input, textarea, select{ font-family:inherit; }
         <div class="pdf-wrap">
           <div class="pdf-card">
             <div class="pdf-icon">PDF</div>
-            <span class="soon-tag">Em validação com o time de marketing</span>
-            <h2>Gerar PDF da apresentação</h2>
-            <p>Essa função vai transformar o resumo desta reunião em um PDF pronto para enviar à escola. Ainda não está disponível nesta versão.</p>
-            <button class="btn-disabled" disabled>Gerar PDF (em breve)</button>
+            <h2>Gerar PDF da proposta</h2>
+            <p>Gera um PDF com os dados da escola coletados nesta reunião, pronto para enviar por WhatsApp ou e-mail.</p>
+            <button class="btn-generate" id="generateBtn">Gerar PDF</button>
             <button class="btn-copy" id="copyBtn">Copiar resumo em texto</button>
             <div class="copy-feedback" id="copyFeedback"></div>
           </div>
@@ -526,6 +523,7 @@ input, textarea, select{ font-family:inherit; }
 
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 const slideLabels = [
   'Apresentação do consultor',
@@ -582,15 +580,36 @@ consultName.addEventListener('input', () => {
   avatarInitials.textContent = initials.toUpperCase();
 });
 
-function collectFields(){
-  const wrap = document.querySelectorAll('.q-section .field input, .q-section .field select, .q-section .field textarea');
-  const rows = [];
-  wrap.forEach(el => {
-    const value = el.value ? el.value.trim() : '';
-    if(value){
-      rows.push({ label: el.dataset.label || el.id, value: value });
-    }
+function collectFieldsByCategory(){
+  const categories = [];
+  document.querySelectorAll('.slide[data-slide="3"] .q-section').forEach(section => {
+    const title = section.querySelector('h3').textContent.trim();
+    const rows = [];
+    section.querySelectorAll('.field').forEach(field => {
+      const checkboxGroup = field.querySelector('[data-checkbox-group]');
+      if(checkboxGroup){
+        const checked = Array.from(checkboxGroup.querySelectorAll('input[type="checkbox"]:checked')).map(c => c.value);
+        if(checked.length){
+          rows.push({ label: checkboxGroup.dataset.label, value: checked.join(', ') });
+        }
+        return;
+      }
+      const el = field.querySelector('input, select, textarea');
+      if(!el) return;
+      const value = el.value ? el.value.trim() : '';
+      if(value){
+        rows.push({ label: el.dataset.label || el.id, value: value });
+      }
+    });
+    if(rows.length) categories.push({ title, rows });
   });
+  return categories;
+}
+
+function collectFields(){
+  const categories = collectFieldsByCategory();
+  const rows = [];
+  categories.forEach(c => rows.push(...c.rows));
   return rows;
 }
 
@@ -610,9 +629,6 @@ function buildSummary(){
   document.getElementById('sumFaturamento').textContent = document.getElementById('faturamentoMedio').value || '—';
   document.getElementById('sumFolha').textContent = document.getElementById('valorFolha').value || '—';
   document.getElementById('sumInadimplencia').textContent = document.getElementById('inadimplencia').value || '—';
-
-  const interesse = document.getElementById('nivelInteresse').value;
-  document.getElementById('interestBadge').textContent = 'Nível de interesse: ' + (interesse || 'a definir');
 }
 
 function escapeHtml(str){
@@ -638,6 +654,119 @@ document.getElementById('copyBtn').addEventListener('click', async () => {
     document.getElementById('copyFeedback').textContent = 'Não foi possível copiar automaticamente. Selecione o texto manualmente.';
   }
 });
+
+function generatePDF(){
+  const feedback = document.getElementById('copyFeedback');
+  if(!window.jspdf){
+    feedback.textContent = 'Não foi possível carregar o gerador de PDF. Verifique sua conexão com a internet e tente novamente.';
+    return;
+  }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const marginX = 18;
+  let y = 0;
+
+  const dark = [16, 1, 39];
+  const magenta = [145, 39, 143];
+  const gray = [90, 90, 95];
+  const lightGray = [226, 224, 228];
+
+  function drawHeader(){
+    doc.setFillColor(...dark);
+    doc.rect(0, 0, pageWidth, 30, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.text('FlexiPay', marginX, 18);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10.5);
+    doc.text('Resumo da reunião e proposta comercial', marginX, 25);
+    y = 42;
+  }
+
+  function checkPageBreak(extra){
+    if(y + extra > pageHeight - 25){
+      doc.addPage();
+      y = 20;
+    }
+  }
+
+  drawHeader();
+
+  const consultantName = consultName.textContent.trim() || 'Não informado';
+  const schoolName = document.getElementById('nomeEscola').value.trim() || 'Escola não informada';
+  const today = new Date().toLocaleDateString('pt-BR');
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(13);
+  doc.setTextColor(...dark);
+  doc.text(schoolName, marginX, y);
+  y += 7;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(10);
+  doc.setTextColor(...gray);
+  doc.text('Consultor: ' + consultantName + '   |   Data: ' + today, marginX, y);
+  y += 10;
+
+  const categories = collectFieldsByCategory();
+
+  if(categories.length === 0){
+    doc.setFontSize(11);
+    doc.setTextColor(...gray);
+    doc.text('Nenhuma resposta registrada ainda. Preencha as perguntas antes de gerar o PDF.', marginX, y);
+    y += 10;
+  }
+
+  categories.forEach(cat => {
+    checkPageBreak(14);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11.5);
+    doc.setTextColor(...magenta);
+    doc.text(cat.title, marginX, y);
+    y += 2;
+    doc.setDrawColor(...lightGray);
+    doc.line(marginX, y, pageWidth - marginX, y);
+    y += 6;
+
+    cat.rows.forEach(row => {
+      checkPageBreak(10);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9.5);
+      doc.setTextColor(...dark);
+      const labelText = row.label + ':';
+      doc.text(labelText, marginX, y);
+      const labelWidth = doc.getTextWidth(labelText) + 3;
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...gray);
+      const valueLines = doc.splitTextToSize(row.value, pageWidth - marginX * 2 - labelWidth);
+      doc.text(valueLines, marginX + labelWidth, y);
+      y += Math.max(6, valueLines.length * 5);
+    });
+    y += 4;
+  });
+
+  checkPageBreak(30);
+  doc.setFillColor(...dark);
+  doc.roundedRect(marginX, y, pageWidth - marginX * 2, 26, 3, 3, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10.5);
+  doc.text('Próximo passo', marginX + 6, y + 9);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  const nextText = 'A FlexiPay vai calcular a taxa de gestão mensal com base nas informações acima e enviar a proposta comercial, com taxa máxima de 2,99% para a antecipação.';
+  const nextLines = doc.splitTextToSize(nextText, pageWidth - marginX * 2 - 12);
+  doc.text(nextLines, marginX + 6, y + 15);
+
+  const fileSchool = schoolName.replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'escola';
+  doc.save('flexipay-proposta-' + fileSchool + '.pdf');
+  feedback.textContent = 'PDF gerado. Confira a pasta de downloads do navegador.';
+}
+
+document.getElementById('generateBtn').addEventListener('click', generatePDF);
 
 goTo(1);
 </script>
