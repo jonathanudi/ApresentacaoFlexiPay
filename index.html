@@ -604,6 +604,80 @@ document.getElementById('generateBtn').addEventListener('click', async () => {
       doc.setDrawColor(...lightGray);
       doc.line(marginX, y - 2, pageWidth - marginX, y - 2);
     });
+    y += 8;
+
+    /* Frase de encerramento com link e botão de WhatsApp */
+    function buildWhatsAppUrl(phone){
+      let digits = (phone || '').replace(/\D/g, '');
+      if(!digits) return null;
+      if(!digits.startsWith('55')) digits = '55' + digits;
+      return 'https://wa.me/' + digits;
+    }
+    const whatsAppUrl = buildWhatsAppUrl(data.consultPhone);
+
+    const closingPhrase = 'Mais do que uma solução financeira, a FlexiBank é parceira da sua escola no dia a dia. Estamos à disposição para dar o próximo passo: é só chamar no WhatsApp. Vamos estruturar juntos o melhor caminho para começar.';
+    const cardPadding = 10;
+    const cardTextWidth = contentWidth - cardPadding * 2;
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9.3);
+    const closingLines = doc.splitTextToSize(closingPhrase, cardTextWidth);
+    const lineHeight = 4.8;
+    const buttonHeight = 9;
+    const cardHeight = cardPadding + closingLines.length * lineHeight + 6 + buttonHeight + cardPadding;
+
+    checkPageBreak(cardHeight + 6);
+
+    doc.setFillColor(...dark);
+    doc.roundedRect(marginX, y, contentWidth, cardHeight, 4, 4, 'F');
+
+    const textStartY = y + cardPadding + 3;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9.3);
+    doc.setTextColor(255, 255, 255);
+    closingLines.forEach((line, i) => {
+      doc.text(line, marginX + cardPadding, textStartY + i * lineHeight);
+    });
+
+    const whatsIndex = closingLines.findIndex(line => line.includes('WhatsApp'));
+    if(whatsIndex !== -1){
+      const line = closingLines[whatsIndex];
+      const wordStart = line.indexOf('WhatsApp');
+      const prefix = line.substring(0, wordStart);
+      const prefixWidth = doc.getTextWidth(prefix);
+      const wordWidth = doc.getTextWidth('WhatsApp');
+      const linkX = marginX + cardPadding + prefixWidth;
+      const linkBaselineY = textStartY + whatsIndex * lineHeight;
+
+      doc.setTextColor(237, 19, 105);
+      doc.text('WhatsApp', linkX, linkBaselineY);
+      doc.setDrawColor(237, 19, 105);
+      doc.setLineWidth(0.3);
+      doc.line(linkX, linkBaselineY + 0.8, linkX + wordWidth, linkBaselineY + 0.8);
+
+      if(whatsAppUrl){
+        doc.link(linkX, linkBaselineY - 3.2, wordWidth, 4.2, { url: whatsAppUrl });
+      }
+    }
+
+    const buttonLabel = 'Falar no WhatsApp';
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(9.5);
+    const buttonTextWidth = doc.getTextWidth(buttonLabel);
+    const buttonWidth = buttonTextWidth + 16;
+    const buttonX = marginX + (contentWidth - buttonWidth) / 2;
+    const buttonY = textStartY + closingLines.length * lineHeight + 4;
+
+    doc.setFillColor(255, 255, 255);
+    doc.roundedRect(buttonX, buttonY, buttonWidth, buttonHeight, buttonHeight / 2, buttonHeight / 2, 'F');
+    doc.setTextColor(...magenta);
+    doc.text(buttonLabel, buttonX + buttonWidth / 2, buttonY + buttonHeight / 2 + 1.4, { align: 'center' });
+
+    if(whatsAppUrl){
+      doc.link(buttonX, buttonY, buttonWidth, buttonHeight, { url: whatsAppUrl });
+    }
+
+    y += cardHeight + 12;
 
     /* Rodapé em todas as páginas */
     const footerLine = 'Site: www.flexibank.com.br   |   Instagram: @flexi.bank'
