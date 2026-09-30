@@ -159,13 +159,24 @@ input, textarea, select{ font-family:inherit; }
       <div class="form-num">3</div>
       <div>
         <h2>Condições comerciais da proposta</h2>
-        <p>Boleto e Pix já entram isentos e a antecipação até 2,99% é fixa</p>
+        <p>Deixe 0,00 nos campos de valor para indicar isenção. A antecipação até 2,99% é fixa</p>
       </div>
     </div>
     <div class="field-grid">
       <div class="field">
+        <label for="precoBoleto">Preço de boleto</label>
+        <div class="currency-wrap"><span>R$</span><input type="text" id="precoBoleto" class="currency-mask" value="0,00"></div>
+        <span class="hint">Deixe 0,00 para isento</span>
+      </div>
+      <div class="field">
+        <label for="precoPix">Preço de Pix</label>
+        <div class="currency-wrap"><span>R$</span><input type="text" id="precoPix" class="currency-mask" value="0,00"></div>
+        <span class="hint">Deixe 0,00 para isento</span>
+      </div>
+      <div class="field">
         <label for="sistemaGestao">Sistema de gestão</label>
-        <div class="currency-wrap"><span>R$</span><input type="text" id="sistemaGestao" placeholder="0,00"></div>
+        <div class="currency-wrap"><span>R$</span><input type="text" id="sistemaGestao" class="currency-mask" value="0,00"></div>
+        <span class="hint">Deixe 0,00 para isento</span>
       </div>
       <div class="field">
         <label for="percentualGestao">Gestão completa de mensalidades</label>
@@ -174,9 +185,13 @@ input, textarea, select{ font-family:inherit; }
       </div>
       <div class="field">
         <label for="valorMinimo">Valor mínimo mensal</label>
-        <div class="currency-wrap"><span>R$</span><input type="text" id="valorMinimo" placeholder="Ex.: 1.200,00"></div>
+        <div class="currency-wrap"><span>R$</span><input type="text" id="valorMinimo" class="currency-mask" placeholder="0,00"></div>
       </div>
-      <div class="field"><label for="taxaImplantacao">Taxa de implantação</label><input type="text" id="taxaImplantacao" placeholder="Ex.: R$ 800,00 ou Isento"><span class="hint">Valor único, pode ser parcelado</span></div>
+      <div class="field">
+        <label for="taxaImplantacao">Taxa de implantação</label>
+        <div class="currency-wrap"><span>R$</span><input type="text" id="taxaImplantacao" class="currency-mask" placeholder="0,00"></div>
+        <span class="hint">Valor único, pode ser parcelado. Deixe 0,00 para isento</span>
+      </div>
       <div class="field">
         <label for="mesInicio">Mês de início da operação</label>
         <select id="mesInicio">
@@ -208,6 +223,34 @@ function fmtCurrency(value){
   return 'R$ ' + trimmed;
 }
 
+function isZeroValue(value){
+  const trimmed = (value || '').trim();
+  if(!trimmed) return false;
+  const num = parseFloat(trimmed.replace(/\./g, '').replace(',', '.'));
+  return !isNaN(num) && num === 0;
+}
+
+function fmtCurrencyIsento(value){
+  if(!value) return '—';
+  const formatted = fmtCurrency(value);
+  return isZeroValue(value) ? (formatted + ' (Isento)') : formatted;
+}
+
+function applyCurrencyMask(el){
+  el.addEventListener('input', () => {
+    let digits = el.value.replace(/\D/g, '');
+    if(!digits){ el.value = ''; return; }
+    digits = digits.replace(/^0+(?=\d)/, '');
+    while(digits.length < 3) digits = '0' + digits;
+    const cents = digits.slice(-2);
+    let intPart = digits.slice(0, -2);
+    intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    el.value = intPart + ',' + cents;
+  });
+}
+
+document.querySelectorAll('.currency-mask').forEach(applyCurrencyMask);
+
 function getFormData(){
   return {
     consultName: document.getElementById('consultName').value.trim() || 'Não informado',
@@ -217,6 +260,8 @@ function getFormData(){
     numAlunos: document.getElementById('numAlunos').value.trim(),
     ticketMedio: document.getElementById('ticketMedio').value.trim(),
     faturamentoMedio: document.getElementById('faturamentoMedio').value.trim(),
+    precoBoleto: document.getElementById('precoBoleto').value.trim(),
+    precoPix: document.getElementById('precoPix').value.trim(),
     sistemaGestao: document.getElementById('sistemaGestao').value.trim(),
     percentualGestao: document.getElementById('percentualGestao').value.trim(),
     valorMinimo: document.getElementById('valorMinimo').value.trim(),
@@ -234,11 +279,15 @@ document.getElementById('copyBtn').addEventListener('click', async () => {
   text += 'Alunos: ' + (d.numAlunos || '-') + '\n';
   text += 'Mensalidade média: ' + (d.ticketMedio ? fmtCurrency(d.ticketMedio) : '-') + '\n';
   text += 'Faturamento médio: ' + (d.faturamentoMedio ? fmtCurrency(d.faturamentoMedio) : '-') + '\n\n';
-  text += 'Sistema de gestão: ' + (d.sistemaGestao ? fmtCurrency(d.sistemaGestao) : '-') + '\n';
+  text += 'Preço de boleto: ' + fmtCurrencyIsento(d.precoBoleto) + '\n';
+  text += 'Preço de Pix: ' + fmtCurrencyIsento(d.precoPix) + '\n';
+  text += 'Sistema de gestão: ' + fmtCurrencyIsento(d.sistemaGestao) + '\n';
   text += 'Gestão completa: ' + (d.percentualGestao ? d.percentualGestao + '%' : '-')
     + (d.valorMinimo ? (' (mínimo mensal ' + fmtCurrency(d.valorMinimo) + ')') : '') + '\n';
   text += 'Antecipação: até 2,99%\n';
-  text += 'Taxa de implantação: ' + (d.taxaImplantacao || '-') + '\n';
+  text += 'Taxa de implantação: ' + (d.taxaImplantacao
+    ? (isZeroValue(d.taxaImplantacao) ? (fmtCurrency(d.taxaImplantacao) + ' (Isento)') : (fmtCurrency(d.taxaImplantacao) + ' (valor único, pode ser parcelado)'))
+    : '-') + '\n';
   text += 'Início: ' + ([d.mesInicio, d.anoInicio].filter(Boolean).join(' de ') || '-') + '\n';
 
   const feedback = document.getElementById('genFeedback');
@@ -498,30 +547,46 @@ document.getElementById('generateBtn').addEventListener('click', async () => {
     doc.text('O que sua escola paga', marginX, y);
     y += 8;
 
+    function wrapMultiline(text, maxWidth){
+      let lines = [];
+      String(text).split('\n').forEach(part => {
+        lines = lines.concat(doc.splitTextToSize(part, maxWidth));
+      });
+      return lines;
+    }
+
     let gestaoText = '—';
     if(data.percentualGestao){
       gestaoText = data.percentualGestao + '% sobre o volume financeiro transacionado';
       if(data.valorMinimo){
-        gestaoText += ' (valor mínimo mensal: ' + fmtCurrency(data.valorMinimo) + ')';
+        gestaoText += '\n(valor mínimo mensal: ' + fmtCurrency(data.valorMinimo) + ')';
       }
     }
+
+    let taxaText = '—';
+    if(data.taxaImplantacao){
+      taxaText = isZeroValue(data.taxaImplantacao)
+        ? (fmtCurrency(data.taxaImplantacao) + ' (Isento)')
+        : (fmtCurrency(data.taxaImplantacao) + '\n(Valor único, pode ser parcelado)');
+    }
+
     const inicio = [data.mesInicio, data.anoInicio].filter(Boolean).join(' de ');
 
     const termRows = [
-      ['Preço de boleto', 'R$ 0,00 (Isento)', false],
-      ['Preço de Pix', 'R$ 0,00 (Isento)', false],
-      ['Sistema de gestão', data.sistemaGestao ? fmtCurrency(data.sistemaGestao) : '—', false],
-      ['Gestão completa de mensalidades com cobrança', gestaoText, false],
-      ['Antecipação', 'até 2,99%', true],
-      ['Taxa de implantação', data.taxaImplantacao || '—', false],
-      ['Início da operação', inicio ? ('Títulos com vencimento a partir de ' + inicio) : '—', false]
+      ['Preço de boleto', fmtCurrencyIsento(data.precoBoleto)],
+      ['Preço de Pix', fmtCurrencyIsento(data.precoPix)],
+      ['Sistema de gestão', fmtCurrencyIsento(data.sistemaGestao)],
+      ['Gestão completa de mensalidades com cobrança', gestaoText],
+      ['Antecipação', 'até 2,99%'],
+      ['Taxa de implantação', taxaText],
+      ['Início da operação', inicio ? ('Títulos com vencimento a partir de ' + inicio) : '—']
     ];
 
-    termRows.forEach(([label, value, accent]) => {
+    termRows.forEach(([label, value]) => {
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(9);
-      const labelLines = doc.splitTextToSize(label, contentWidth * 0.46);
-      const valueLines = doc.splitTextToSize(value, contentWidth * 0.46);
+      const labelLines = wrapMultiline(label, contentWidth * 0.46);
+      const valueLines = wrapMultiline(value, contentWidth * 0.46);
       const rowHeight = Math.max(labelLines.length, valueLines.length) * 4.6 + 7;
       checkPageBreak(rowHeight);
 
@@ -532,7 +597,7 @@ document.getElementById('generateBtn').addEventListener('click', async () => {
 
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(9.5);
-      doc.setTextColor(accent ? magenta[0] : dark[0], accent ? magenta[1] : dark[1], accent ? magenta[2] : dark[2]);
+      doc.setTextColor(...dark);
       doc.text(valueLines, pageWidth - marginX, y + 5, { align: 'right' });
 
       y += rowHeight;
