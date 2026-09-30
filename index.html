@@ -103,11 +103,23 @@ input, textarea, select{ font-family:inherit; }
   .app-body{ padding:28px 18px 90px; }
 }
 
-/* ===== Modelo do PDF (renderizado fora da tela e capturado) ===== */
+/* ===== Overlay exibido durante a geração do PDF ===== */
+#pdfOverlay{
+  display:none; position:fixed; inset:0; background:var(--ice); z-index:99998;
+  align-items:center; justify-content:center; flex-direction:column; gap:10px;
+}
+#pdfOverlay.active{ display:flex; }
+#pdfOverlay span{ font-size:.95rem; font-weight:800; color:var(--magenta); }
+
+/* ===== Modelo do PDF (capturado pelo html2canvas) =====
+   Fica display:none em repouso. html2canvas não renderiza corretamente elementos
+   posicionados fora da tela com left negativo grande, então ele só é exibido
+   (por cima de um overlay) no instante da geração e escondido logo em seguida. */
 #pdfTemplate{
-  position:absolute; top:0; left:-10000px; width:760px;
+  display:none; position:fixed; top:0; left:0; width:760px; z-index:99999;
   background:var(--white); color:var(--gray-800); font-family:'Nunito Sans', sans-serif;
 }
+#pdfTemplate.active{ display:block; }
 .pdf-page{ padding:0 0 36px; }
 
 .pdf-header{
@@ -242,17 +254,20 @@ input, textarea, select{ font-family:inherit; }
       </div>
     </div>
     <div class="field-grid">
-      <div class="field full"><label for="sistemaGestao">Sistema de gestão</label><input type="text" id="sistemaGestao" placeholder="Ex.: sistema próprio FlexiBank"></div>
+      <div class="field">
+        <label for="sistemaGestao">Sistema de gestão</label>
+        <div class="currency-wrap"><span>R$</span><input type="text" id="sistemaGestao" placeholder="0,00"></div>
+      </div>
       <div class="field">
         <label for="percentualGestao">Gestão completa de mensalidades</label>
-        <div class="currency-wrap"><input type="text" id="percentualGestao" placeholder="0,00" style="padding-left:12px; padding-right:28px;"><span style="left:auto; right:12px;">%</span></div>
+        <div class="currency-wrap"><input type="text" id="percentualGestao" placeholder="Ex.: 2,30" style="padding-left:12px; padding-right:28px;"><span style="left:auto; right:12px;">%</span></div>
         <span class="hint">Sobre o volume financeiro transacionado</span>
       </div>
       <div class="field">
         <label for="valorMinimo">Valor mínimo mensal</label>
-        <div class="currency-wrap"><span>R$</span><input type="text" id="valorMinimo" placeholder="0,00"></div>
+        <div class="currency-wrap"><span>R$</span><input type="text" id="valorMinimo" placeholder="Ex.: 1.200,00"></div>
       </div>
-      <div class="field full"><label for="taxaImplantacao">Taxa de implantação</label><input type="text" id="taxaImplantacao" placeholder="Ex.: R$ 800,00 ou Isento"><span class="hint">Valor único, pode ser parcelado</span></div>
+      <div class="field"><label for="taxaImplantacao">Taxa de implantação</label><input type="text" id="taxaImplantacao" placeholder="Ex.: R$ 800,00 ou Isento"><span class="hint">Valor único, pode ser parcelado</span></div>
       <div class="field">
         <label for="mesInicio">Mês de início da operação</label>
         <select id="mesInicio">
@@ -275,6 +290,8 @@ input, textarea, select{ font-family:inherit; }
     <button class="btn-generate" id="generateBtn">Gerar PDF da proposta</button>
   </div>
 </div>
+
+<div id="pdfOverlay"><span>Gerando PDF da proposta...</span></div>
 
 <div id="pdfTemplate">
   <div class="pdf-page">
@@ -375,7 +392,6 @@ input, textarea, select{ font-family:inherit; }
         <div class="pdf-terms-row"><div class="label">Preço de Pix</div><div class="value">R$ 0,00 (Isento)</div></div>
         <div class="pdf-terms-row"><div class="label">Sistema de gestão</div><div class="value" id="pdfSistemaGestao">—</div></div>
         <div class="pdf-terms-row"><div class="label">Gestão completa de mensalidades com cobrança</div><div class="value" id="pdfPercentualGestao">—</div></div>
-        <div class="pdf-terms-row"><div class="label">Valor mínimo mensal</div><div class="value" id="pdfValorMinimo">—</div></div>
         <div class="pdf-terms-row accent"><div class="label">Antecipação</div><div class="value">até 2,99%</div></div>
         <div class="pdf-terms-row"><div class="label">Taxa de implantação</div><div class="value" id="pdfTaxaImplantacao">—</div></div>
         <div class="pdf-terms-row"><div class="label">Início da operação</div><div class="value" id="pdfInicioOperacao">—</div></div>
@@ -430,11 +446,16 @@ function fillTemplate(data){
   document.getElementById('pdfTicket').textContent = data.ticketMedio ? fmtCurrency(data.ticketMedio) : '—';
   document.getElementById('pdfFaturamento').textContent = data.faturamentoMedio ? fmtCurrency(data.faturamentoMedio) : '—';
 
-  document.getElementById('pdfSistemaGestao').textContent = data.sistemaGestao || '—';
-  document.getElementById('pdfPercentualGestao').textContent = data.percentualGestao
-    ? (data.percentualGestao + '% sobre o volume financeiro transacionado')
-    : '—';
-  document.getElementById('pdfValorMinimo').textContent = data.valorMinimo ? fmtCurrency(data.valorMinimo) : '—';
+  document.getElementById('pdfSistemaGestao').textContent = data.sistemaGestao ? fmtCurrency(data.sistemaGestao) : '—';
+
+  let gestaoText = '—';
+  if(data.percentualGestao){
+    gestaoText = data.percentualGestao + '% sobre o volume financeiro transacionado';
+    if(data.valorMinimo){
+      gestaoText += ' (valor mínimo mensal: ' + fmtCurrency(data.valorMinimo) + ')';
+    }
+  }
+  document.getElementById('pdfPercentualGestao').textContent = gestaoText;
   document.getElementById('pdfTaxaImplantacao').textContent = data.taxaImplantacao || '—';
 
   const inicio = [data.mesInicio, data.anoInicio].filter(Boolean).join(' de ');
@@ -451,9 +472,9 @@ document.getElementById('copyBtn').addEventListener('click', async () => {
   text += 'Alunos: ' + (d.numAlunos || '-') + '\n';
   text += 'Mensalidade média: ' + (d.ticketMedio ? fmtCurrency(d.ticketMedio) : '-') + '\n';
   text += 'Faturamento médio: ' + (d.faturamentoMedio ? fmtCurrency(d.faturamentoMedio) : '-') + '\n\n';
-  text += 'Sistema de gestão: ' + (d.sistemaGestao || '-') + '\n';
-  text += 'Gestão completa: ' + (d.percentualGestao ? d.percentualGestao + '%' : '-') + '\n';
-  text += 'Valor mínimo mensal: ' + (d.valorMinimo ? fmtCurrency(d.valorMinimo) : '-') + '\n';
+  text += 'Sistema de gestão: ' + (d.sistemaGestao ? fmtCurrency(d.sistemaGestao) : '-') + '\n';
+  text += 'Gestão completa: ' + (d.percentualGestao ? d.percentualGestao + '%' : '-')
+    + (d.valorMinimo ? (' (mínimo mensal ' + fmtCurrency(d.valorMinimo) + ')') : '') + '\n';
   text += 'Antecipação: até 2,99%\n';
   text += 'Taxa de implantação: ' + (d.taxaImplantacao || '-') + '\n';
   text += 'Início: ' + ([d.mesInicio, d.anoInicio].filter(Boolean).join(' de ') || '-') + '\n';
@@ -484,6 +505,7 @@ document.getElementById('generateBtn').addEventListener('click', async () => {
   feedback.textContent = '';
 
   const template = document.getElementById('pdfTemplate');
+  const overlay = document.getElementById('pdfOverlay');
   const fileSchool = data.nomeEscola.replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'escola';
 
   const options = {
@@ -495,13 +517,31 @@ document.getElementById('generateBtn').addEventListener('click', async () => {
     pagebreak: { mode: ['css', 'legacy'] }
   };
 
+  function waitFrames(count){
+    return new Promise(resolve => {
+      function step(n){
+        if(n <= 0){ resolve(); return; }
+        requestAnimationFrame(() => step(n - 1));
+      }
+      step(count);
+    });
+  }
+
   try{
+    /* html2canvas não captura corretamente um elemento deixado fora da tela
+       com left negativo grande, então ele precisa ficar realmente visível
+       (coberto pelo overlay) no instante da captura. */
+    overlay.classList.add('active');
+    template.classList.add('active');
     if(document.fonts && document.fonts.ready){ await document.fonts.ready; }
+    await waitFrames(2);
     await window.html2pdf().set(options).from(template).save();
     feedback.textContent = 'PDF gerado. Confira a pasta de downloads do navegador.';
   } catch(err){
     feedback.textContent = 'Não foi possível gerar o PDF. Tente novamente.';
   } finally{
+    template.classList.remove('active');
+    overlay.classList.remove('active');
     btn.disabled = false;
     btn.textContent = 'Gerar PDF da proposta';
   }
