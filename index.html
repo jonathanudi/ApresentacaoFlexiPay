@@ -126,6 +126,14 @@ input, textarea, select{ font-family:inherit; }
       </div>
     </div>
     <div class="field-grid">
+      <div class="field full">
+        <label for="consultSelect">Consultor(a)</label>
+        <select id="consultSelect">
+          <option value="sabrina">Sabrina Guerra</option>
+          <option value="fabricia">Fabrícia de Conto</option>
+          <option value="outro">Outro</option>
+        </select>
+      </div>
       <div class="field"><label for="consultName">Nome</label><input type="text" id="consultName" value="Sabrina Guerra"></div>
       <div class="field"><label for="consultPhone">Telefone</label><input type="text" id="consultPhone" value="34 99971-0212"></div>
       <div class="field full"><label for="consultEmail">E-mail</label><input type="text" id="consultEmail" value="sabrinaguerra@flexibank.com.br"></div>
@@ -190,7 +198,7 @@ input, textarea, select{ font-family:inherit; }
       <div class="field">
         <label for="taxaImplantacao">Taxa de implantação</label>
         <div class="currency-wrap"><span>R$</span><input type="text" id="taxaImplantacao" class="currency-mask" placeholder="0,00"></div>
-        <span class="hint">Valor único, pode ser parcelado. Deixe 0,00 para isento</span>
+        <span class="hint">Valor único, com possibilidade de parcelamento. Deixe 0,00 para isento</span>
       </div>
       <div class="field">
         <label for="mesInicio">Mês de início da operação</label>
@@ -251,6 +259,20 @@ function applyCurrencyMask(el){
 
 document.querySelectorAll('.currency-mask').forEach(applyCurrencyMask);
 
+const CONSULTANTS = {
+  sabrina: { name: 'Sabrina Guerra', phone: '34 99971-0212', email: 'sabrinaguerra@flexibank.com.br' },
+  fabricia: { name: 'Fabrícia de Conto', phone: '34 99306-3539', email: 'Fabricia.conto@flexibank.com.br' },
+  outro: { name: '', phone: '', email: '' }
+};
+
+document.getElementById('consultSelect').addEventListener('change', (e) => {
+  const c = CONSULTANTS[e.target.value];
+  if(!c) return;
+  document.getElementById('consultName').value = c.name;
+  document.getElementById('consultPhone').value = c.phone;
+  document.getElementById('consultEmail').value = c.email;
+});
+
 function getFormData(){
   return {
     consultName: document.getElementById('consultName').value.trim() || 'Não informado',
@@ -286,7 +308,7 @@ document.getElementById('copyBtn').addEventListener('click', async () => {
     + (d.valorMinimo ? (' (mínimo mensal ' + fmtCurrency(d.valorMinimo) + ')') : '') + '\n';
   text += 'Antecipação: até 2,99%\n';
   text += 'Taxa de implantação: ' + (d.taxaImplantacao
-    ? (isZeroValue(d.taxaImplantacao) ? (fmtCurrency(d.taxaImplantacao) + ' (Isento)') : (fmtCurrency(d.taxaImplantacao) + ' (valor único, pode ser parcelado)'))
+    ? (isZeroValue(d.taxaImplantacao) ? (fmtCurrency(d.taxaImplantacao) + ' (Isento)') : (fmtCurrency(d.taxaImplantacao) + ' (valor único, com possibilidade de parcelamento)'))
     : '-') + '\n';
   text += 'Início: ' + ([d.mesInicio, d.anoInicio].filter(Boolean).join(' de ') || '-') + '\n';
 
@@ -389,7 +411,7 @@ document.getElementById('generateBtn').addEventListener('click', async () => {
     doc.setTextColor(255, 255, 255);
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(16);
-    doc.text('Proposta comercial', marginX + 24, 15);
+    doc.text('Proposta Comercial', marginX + 24, 15);
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9.5);
     doc.text('Gestão de mensalidades e antecipação sob medida', marginX + 24, 21.5);
@@ -408,6 +430,15 @@ document.getElementById('generateBtn').addEventListener('click', async () => {
     doc.text('Data: ' + today, marginX, y);
     y += 12;
 
+    function buildWhatsAppUrl(phone){
+      let digits = (phone || '').replace(/\D/g, '');
+      if(!digits) return null;
+      if(!digits.startsWith('55')) digits = '55' + digits;
+      return 'https://wa.me/' + digits;
+    }
+    const whatsAppUrl = buildWhatsAppUrl(data.consultPhone);
+    const pink = [237, 19, 105];
+
     /* Perfil do consultor */
     sectionTitle('Perfil do consultor');
     doc.setFont('helvetica', 'bold');
@@ -415,14 +446,30 @@ document.getElementById('generateBtn').addEventListener('click', async () => {
     doc.setTextColor(...dark);
     doc.text(data.consultName, marginX, y);
     y += 6;
+
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9.5);
-    doc.setTextColor(...gray);
-    const consultLines = [
-      data.consultPhone ? ('Telefone: ' + data.consultPhone) : '',
-      data.consultEmail ? ('E-mail: ' + data.consultEmail) : ''
-    ].filter(Boolean);
-    consultLines.forEach(line => { doc.text(line, marginX, y); y += 5; });
+    if(data.consultPhone){
+      const prefix = 'Telefone: ';
+      doc.setTextColor(...gray);
+      doc.text(prefix, marginX, y);
+      const prefixWidth = doc.getTextWidth(prefix);
+      const phoneWidth = doc.getTextWidth(data.consultPhone);
+      doc.setTextColor(...pink);
+      doc.text(data.consultPhone, marginX + prefixWidth, y);
+      if(whatsAppUrl){
+        doc.setDrawColor(...pink);
+        doc.setLineWidth(0.3);
+        doc.line(marginX + prefixWidth, y + 0.8, marginX + prefixWidth + phoneWidth, y + 0.8);
+        doc.link(marginX + prefixWidth, y - 3.2, phoneWidth, 4.2, { url: whatsAppUrl });
+      }
+      y += 5;
+    }
+    if(data.consultEmail){
+      doc.setTextColor(...gray);
+      doc.text('E-mail: ' + data.consultEmail, marginX, y);
+      y += 5;
+    }
     y += 6;
 
     /* Sobre a FlexiBank */
@@ -441,7 +488,7 @@ document.getElementById('generateBtn').addEventListener('click', async () => {
     doc.setFontSize(9.5);
     doc.setTextColor(...gray);
     const subLines = doc.splitTextToSize(
-      'Há 23 anos no mercado educacional, a FlexiBank assume a emissão, o acompanhamento e a cobrança das mensalidades das escolas parceiras e oferece antecipação de receita sob medida, de forma fixa, mensal, ou esporádica, para necessidades específicas.',
+      'Há 23 anos no mercado educacional, a FlexiBank assume a emissão, o acompanhamento e a cobrança das mensalidades das escolas parceiras, oferecendo antecipação de receita sob medida, mensal ou pontual, mediante análise cadastral.',
       contentWidth
     );
     doc.text(subLines, marginX, y);
@@ -464,8 +511,8 @@ document.getElementById('generateBtn').addEventListener('click', async () => {
     /* Como funciona */
     sectionTitle('Como funciona');
     const features = [
-      ['doc', 'Gestão integrada', 'Emissão e envio de boletos por WhatsApp, e-mail, DDA ou App, acompanhamento e cobrança humanizada das mensalidades.'],
-      ['sliders', 'Condições ajustadas', 'Antecipação de mensalidades, de forma fixa ou variável, de acordo com a necessidade do cliente.'],
+      ['doc', 'Gestão integrada', 'Emissão e envio de boletos por WhatsApp, e-mail, DDA ou App, acompanhamento e cobrança humanizada e automatizada das mensalidades.'],
+      ['sliders', 'Condições ajustadas', 'Antecipação de mensalidades de acordo com a necessidade do cliente.'],
       ['check', 'Folha garantida', 'Pagamento da folha salarial da equipe escolar, na data acordada, sem depender das mensalidades.'],
       ['grid', 'Sistema de gestão', 'Para cadastro de clientes e matrículas, facilita o acompanhamento dos pagamentos e da inadimplência, trazendo mais controle e transparência.'],
       ['chat', 'WhatsApp e aplicativo', 'Além de receber os boletos mensalmente, alunos e responsáveis têm acesso ao aplicativo FlexiBank para consultar, baixar boletos e acompanhar o histórico de pagamentos.']
@@ -544,7 +591,7 @@ document.getElementById('generateBtn').addEventListener('click', async () => {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(10.5);
     doc.setTextColor(...dark);
-    doc.text('Nossa proposta para sua escola', marginX, y);
+    doc.text('O que sua escola paga', marginX, y);
     y += 8;
 
     function wrapMultiline(text, maxWidth){
@@ -567,7 +614,7 @@ document.getElementById('generateBtn').addEventListener('click', async () => {
     if(data.taxaImplantacao){
       taxaText = isZeroValue(data.taxaImplantacao)
         ? (fmtCurrency(data.taxaImplantacao) + ' (Isento)')
-        : (fmtCurrency(data.taxaImplantacao) + '\n(Valor único, pode ser parcelado)');
+        : (fmtCurrency(data.taxaImplantacao) + '\n(Valor único, com possibilidade de parcelamento)');
     }
 
     const inicio = [data.mesInicio, data.anoInicio].filter(Boolean).join(' de ');
@@ -607,14 +654,6 @@ document.getElementById('generateBtn').addEventListener('click', async () => {
     y += 8;
 
     /* Frase de encerramento com link e botão de WhatsApp */
-    function buildWhatsAppUrl(phone){
-      let digits = (phone || '').replace(/\D/g, '');
-      if(!digits) return null;
-      if(!digits.startsWith('55')) digits = '55' + digits;
-      return 'https://wa.me/' + digits;
-    }
-    const whatsAppUrl = buildWhatsAppUrl(data.consultPhone);
-
     const closingPhrase = 'Mais do que uma solução financeira, a FlexiBank é parceira da sua escola no dia a dia. Estamos à disposição para dar o próximo passo: é só chamar no WhatsApp. Vamos estruturar juntos o melhor caminho para começar.';
     const cardPadding = 10;
     const cardTextWidth = contentWidth - cardPadding * 2;
@@ -649,9 +688,9 @@ document.getElementById('generateBtn').addEventListener('click', async () => {
       const linkX = marginX + cardPadding + prefixWidth;
       const linkBaselineY = textStartY + whatsIndex * lineHeight;
 
-      doc.setTextColor(237, 19, 105);
+      doc.setTextColor(...pink);
       doc.text('WhatsApp', linkX, linkBaselineY);
-      doc.setDrawColor(237, 19, 105);
+      doc.setDrawColor(...pink);
       doc.setLineWidth(0.3);
       doc.line(linkX, linkBaselineY + 0.8, linkX + wordWidth, linkBaselineY + 0.8);
 
@@ -680,8 +719,8 @@ document.getElementById('generateBtn').addEventListener('click', async () => {
     y += cardHeight + 12;
 
     /* Rodapé em todas as páginas */
-    const footerLine = 'Site: www.flexibank.com.br   |   Instagram: @flexi.bank'
-      + (data.consultPhone ? ('   |   WhatsApp: ' + data.consultPhone) : '');
+    const footerPrefix = 'Site: www.flexibank.com.br   |   Instagram: @flexi.bank';
+    const footerWhatsLabel = '   |   WhatsApp: ';
     const totalPages = doc.internal.getNumberOfPages();
     for(let i = 1; i <= totalPages; i++){
       doc.setPage(i);
@@ -689,9 +728,31 @@ document.getElementById('generateBtn').addEventListener('click', async () => {
       doc.line(marginX, pageHeight - 15, pageWidth - marginX, pageHeight - 15);
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(7.6);
+
+      let fx = marginX;
+      const fy = pageHeight - 9;
       doc.setTextColor(...gray);
-      doc.text(footerLine, marginX, pageHeight - 9);
-      doc.text(String(i) + ' / ' + totalPages, pageWidth - marginX, pageHeight - 9, { align: 'right' });
+      doc.text(footerPrefix, fx, fy);
+      fx += doc.getTextWidth(footerPrefix);
+
+      if(data.consultPhone){
+        doc.setTextColor(...gray);
+        doc.text(footerWhatsLabel, fx, fy);
+        fx += doc.getTextWidth(footerWhatsLabel);
+
+        const phoneWidth = doc.getTextWidth(data.consultPhone);
+        doc.setTextColor(...pink);
+        doc.text(data.consultPhone, fx, fy);
+        if(whatsAppUrl){
+          doc.setDrawColor(...pink);
+          doc.setLineWidth(0.25);
+          doc.line(fx, fy + 0.7, fx + phoneWidth, fy + 0.7);
+          doc.link(fx, fy - 2.8, phoneWidth, 3.6, { url: whatsAppUrl });
+        }
+      }
+
+      doc.setTextColor(...gray);
+      doc.text(String(i) + ' / ' + totalPages, pageWidth - marginX, fy, { align: 'right' });
     }
 
     const fileSchool = data.nomeEscola.replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'escola';
