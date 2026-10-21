@@ -295,7 +295,7 @@ function getFormData(){
 
 document.getElementById('copyBtn').addEventListener('click', async () => {
   const d = getFormData();
-  let text = 'Proposta comercial FlexiBank\n';
+  let text = 'Proposta comercial FlexiPay\n';
   text += 'Consultor: ' + d.consultName + ' | ' + d.consultPhone + ' | ' + d.consultEmail + '\n\n';
   text += 'Escola: ' + d.nomeEscola + '\n';
   text += 'Alunos: ' + (d.numAlunos || '-') + '\n';
@@ -474,8 +474,8 @@ document.getElementById('generateBtn').addEventListener('click', async () => {
     }
     y += 6;
 
-    /* Sobre a FlexiBank */
-    sectionTitle('Sobre a FlexiBank');
+    /* Sobre a FlexiPay */
+    sectionTitle('Sobre a FlexiPay');
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(10);
     doc.setTextColor(...dark);
@@ -490,7 +490,7 @@ document.getElementById('generateBtn').addEventListener('click', async () => {
     doc.setFontSize(9.5);
     doc.setTextColor(...gray);
     const subLines = doc.splitTextToSize(
-      'Há 23 anos no mercado educacional, a FlexiBank assume a emissão, o acompanhamento e a cobrança das mensalidades das escolas parceiras, oferecendo antecipação de receita sob medida, mensal ou pontual, mediante análise cadastral.',
+      'Há 23 anos no mercado educacional, a FlexiPay assume a emissão, o acompanhamento e a cobrança das mensalidades das escolas parceiras, oferecendo antecipação de receita sob medida, mensal ou pontual, mediante análise cadastral.',
       contentWidth
     );
     doc.text(subLines, marginX, y);
@@ -517,7 +517,7 @@ document.getElementById('generateBtn').addEventListener('click', async () => {
       ['sliders', 'Condições ajustadas', 'Antecipação de mensalidades de acordo com a necessidade do cliente.'],
       ['check', 'Folha garantida', 'Pagamento da folha salarial da equipe escolar, na data acordada, sem depender das mensalidades.'],
       ['grid', 'Sistema de gestão', 'Para cadastro de clientes e matrículas, facilita o acompanhamento dos pagamentos e da inadimplência, trazendo mais controle e transparência.'],
-      ['chat', 'WhatsApp e aplicativo', 'Além de receber os boletos mensalmente, alunos e responsáveis têm acesso ao aplicativo FlexiBank para consultar, baixar boletos e acompanhar o histórico de pagamentos.']
+      ['chat', 'WhatsApp e aplicativo', 'Além de receber os boletos mensalmente, alunos e responsáveis têm acesso ao aplicativo FlexiPay para consultar, baixar boletos e acompanhar o histórico de pagamentos.']
     ];
 
     const iconSize = 9;
@@ -656,7 +656,7 @@ document.getElementById('generateBtn').addEventListener('click', async () => {
     y += 8;
 
     /* Frase de encerramento com link e botão de WhatsApp */
-    const closingPhrase = 'Mais do que uma solução financeira, a FlexiBank é parceira da sua escola no dia a dia. Estamos à disposição para dar o próximo passo: é só chamar no WhatsApp. Vamos estruturar juntos o melhor caminho para começar.';
+    const closingPhrase = 'Mais do que uma solução financeira, a FlexiPay é parceira da sua escola no dia a dia. Estamos à disposição para dar o próximo passo: é só chamar no WhatsApp. Vamos estruturar juntos o melhor caminho para começar.';
     const cardPadding = 10;
     const cardTextWidth = contentWidth - cardPadding * 2;
 
@@ -758,7 +758,7 @@ document.getElementById('generateBtn').addEventListener('click', async () => {
     }
 
     const fileSchool = data.nomeEscola.replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-+|-+$/g, '').toLowerCase() || 'escola';
-    doc.save('flexibank-proposta-' + fileSchool + '.pdf');
+    doc.save('flexipay-proposta-' + fileSchool + '.pdf');
     feedback.textContent = 'PDF gerado. Confira a pasta de downloads do navegador.';
   } catch(err){
     feedback.textContent = 'Não foi possível gerar o PDF. Tente novamente.';
